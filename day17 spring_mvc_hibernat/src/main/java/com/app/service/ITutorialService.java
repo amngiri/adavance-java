@@ -1,0 +1,17 @@
+package com.app.service;
+
+import java.util.List;
+
+import com.app.pojos.Tutorial;
+
+public interface ITutorialService {
+	List<String> getTutorialsByTopic(int topicId);
+
+	Tutorial getUpdatedTutDetails(String tutName);
+
+	void delete_Tutorial(String tutName);
+
+	void addTutorialsByTopic(int topicId, Tutorial t);
+
+	void updateTutorialsByTopic(int topicId,Tutorial t);
+}
