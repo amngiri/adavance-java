@@ -1,0 +1,576 @@
+Java EE
+Day 1
+1. import day1.1 , in your newly created J2EE workspace
+1.1 Fix build path.
+1.2 Edit DB username n password
+1.3 Revise DBUtils n testing of Statement n PreparedStatement.
+
+2. Fresh assignment will be discussed later.
+2. Refer to "topics-tutorials diagram"
+2.1 Refer to "JavaEE\day1-data\day1_help\jdbc help\sql\topics-tutorials.txt"
+Copy DDL n DML for : users , topics n tutorials table.
+
+Solve 
+1. User Login
+i/p : email ,password
+o/p : User details in case of successful login or login failed message
+
+2. Change password
+i/p : email ,password , new password
+o/p : A message indicating success or failure.
+
+3. Get all available topics
+
+
+Day 2
+1. Revise JDBC CRUD app , by importing day2.1 in your workspace
+1.1 Fix build path.
+1.2 Edit DB username n password from DBUtils
+
+
+2. Fresh assignment , to complete data access logic of the Content Management System(topic-tutorials). MUST be done using layered architecture.
+
+You can give it a try independently , otherwise , I will discuss it after I join.
+Layers : Tester --DAO --DBUtils --POJO --DB
+
+2.1 
+User Login
+i/p : email ,password
+o/p : User details in case of successful login or login failed message
+Steps
+1. DB Layer : users (exists)
+2. User POJO
+2.1 properties : => cols : id | name    | email          | password | reg_amt | reg_date   | role : java style names
+2.2 def ctor
+2.3 getters n setters
+2.4 toString
+3. DBUtils : copy from earlier
+4. DAO : i/f 
+4.1 User authenticateUser(String em,String pass) throws SE
+
+5. JDBC based DAO imple class
+5.1 state : cn pst1
+5.2 def ctor : open cn(DBUtils) , pst1
+5.3 CRUD method 
+ User authenticateUser(String em,String pass) throws SE
+set In params
+execQuery --> RST --> process RST --success => return User pojo populated with DB data
+failure => null
+5.4 cleanUp : close pst n then cn
+
+6. TestUserLogin
+create dao instance , pass user credentials , invoke dao's method, clean up dao.
+
+
+2.2 Display all available topics
+ITopicDAO i/f
+List<Topic> getAllAvailableTopics() throws SE
+
+2.3 Display all available tutorial names , under selected topic , sorted as per visits , in desc order.
+i/p : topic id
+ITuotrialDAO i/f
+List<String> getTutorialsByTopicId(int topicId) throws SE
+
+2.4 Display selected  tutorial details by name
+i/p : tutorial name 
+ITutorialDAO i/f
+Tutorial getTutorialDetailsByName(String tutName) throws SE
+
+
+2.5 Update visits 
+i/p tutorial id
+
+ITutorialDao i/f
+String updateVisits(int tutorialId) throws SE
+
+
+
+3. Steps will be discussed.
+Add a web server to the workspace . Test it. Deploy a simple web app n test HTML content.
+
+
+4. Reading H.W
+Refer to JavaEE\day1-data\day1_help\web_prog_prerequisites\web basics\
+Read HTTP Basics n web server basics pls.
+
+
+Day 3
+Please follow this sequence in today's lab.
+Refer to today's sequence.txt , diagrams , readmes for better understanding n revise.
+
+Steps
+1. Create a new dynamic web project (check web.xml checkbox) : eg day3_lab
+
+1.1 Create a welcome page : index.html
+Add a link : to invoke the servlet (which will be deployed using @WebServlet annoatation)
+
+Create FirstServlet.java , override life cycle methods & trace the life cycle.
+Use @WebServlet annoatation 
+
+1.2 Add another link in index.html : to invoke the servlet (which will be deployed using xml tags)
+
+Create SecondServlet.java , override life cycle methods & trace the life cycle.
+Do NOT Use @WebServlet annoatation , instead add xml tags in web.xml
+
+
+1.3 Add / in anchor tag's href. Observe n conclude
+eg : http://localhost:9090/hello
+HTTP 404
+
+1.4 Remove / from the url-pattern . Observe n conclude
+Web app failed to start
+Exc : java.lang.IllegalArgumentException
+root cause : invalid url pattern
+
+
+1.5 Give same url-pattern to both of these servlets . Observe n conclude
+Web server fails to start
+Exc : java.lang.IllegalArgumentException
+root cause : multiple servlets CAN'T be mapped to the SAME URL PATTERN
+
+1.55 Can one servlet be deployed under multiple url patterns ? YES
+
+
+1.6 Add a new link in index.html : for User Login
+Copy login.html from \JavaEE\day3-data\day3_help\HTML pages\login.html under webapp(i.e root of the web application)
+Write a LoginServlet , to display user's email n password.
+
+2. Complete pending work.
+
+Day 4
+1. import day4.2 project in your workspace to revise load on startup ,Page navigation n cookie based session tracking
+1.1 Edit DB username n password from DBUtils
+1.2 Open index.html .
+Trace all the links completely from servlet --DB , to do a quick revision.
+1.3 Understand cookie based flow , with cookies enabled n later disabled.
+Inspect network traffic , for full understanding.
+URL Request
+1. http://host:port/day4.2
+Resp : index.html
+
+2. If clnt clicks on "lazy loading link"
+http://host:port/day4.2/test1 
+--> Servlet1 --starts the life cycle (lazy)
+Resp : "Testing lazy/eager loading polcies "+new Date()"
+
+3. If clnt clicks on "eager loading link"
+http://host:port/day4.2/test2 
+--> Servlet2 --> WC has alrdy started the life cycle(cls loading --> inst --> init)
+--> directly call public service(rq,rs) --> protected service(httpRq,hhtpRs) --> doGet
+Resp : "Testing lazy/eager loading polcies "+new Date()"
+
+4. If clnt clicks on "User login"
+resp --> login form
+
+5. After login form submission
+URL : http://host:port/day4.2/authenticate
+In case of invalid login : resp : retry link
+
+In case of success : resp : temp redirect resp
+SC 302 , location n set-cookie , body : empty
+
+6. Redirect request generated from the clnt browser
+URL : http://host:port/day4.2/topics
+
+7. In TopicsServlet
+override : init , destroy , doPost
+init : create TopicDao instance.
+destroy : clean up TopicDao instance.
+(NOTE : remove close=ing of connection from all DAO's cleanUp method. Instead call DBUtils.closeConnection() exactly once , from destroy of the LoginServlet)
+In doPost of TopicsServlet : 
+Help on dynamic form generation , in TopicsServlet : 
+Generate HTML form n pass it throught PW
+<form method action>
+Iterate over List<Topic> : <input type='radio' name='topic_id' value='dyn value of topic id'>topic name
+<input type='submit' value='Choose Topic'>
+</form> 
+
+2. Complete pending work.
+
+3. Continuation of CMS (content management system) will be discussed later.
+
+Day 5
+1. import day5_cms or refer to your own CMS based case study n revise complete flow from login.html to logout
+1.1 Client Pull : redirect
+1.2 Session Tracking based upon HttpSession
+1.3 Dynamic form generation
+1.4 Sharing of resources (DAO s) using session.
+
+Request
+1. http://localhost:9090/day5_cms
+resp : login.html
+
+2. After form submissiom
+req : http://localhost:9090/day5_cms/authenticate
+resp in case of successful login : temp redirect resp
+SC 302 , location n set-cookie : JSESSIONID : 43524fsdg , body : empty
+
+3. Redirect request generated from the clnt browser
+URL : http://host:port/day5_cms/topics
+resp from TopicsServlet : dynamically generated form having topic names with radio buttons
+
+
+4. If user chose , "Spring Framework" topic , next request : 
+URL : http://localhost:9090/day5_cms/tutorials?topic_id=4
+resp : from TutorialsServlet : showing links for : Spring Core , Spring MVC , Spring Boot
+
+5. If user clicked on a link "Spring Boot" , next request 
+URL : http://localhost:9090/day5_cms/tutorial_details?tut_name=Spring%20Boot
+Resp from TutorialDetails page :
+complete tut details for Spring Boot
+
+6. In case user clicks on back link 
+URL : http://localhost:9090/day5_cms/tutorials?topic_id=4
+user will be navigated back to Tutorials page
+
+7. In case user clicks on logout link
+URL : http://localhost:9090/day5_cms/logout
+Invalidating HttpSession n visit again link.
+
+2. If possible , fix visits related bug.
+
+3. After I join the session , we will definitely discuss admin flow .
+Detailed Steps
+1. Modify LoginServlet , login successful branch.
+Check user role (user.getRole().equals) n accordingly redirect to "ShowFormServlet" in case of admin login or to TopicsServlet , in case of customer login.
+
+2. ShowFormServlet
+Will you need HttpSession ? 
+What will you fetch from session scope ?
+Will you need to call any dao's method ? 
+Continue to dynamic form generation.
+You can either take topic from a text field or from select-option list.
+Prepare the form , along with submit button.
+
+Test till this page.
+
+
+4. Refer to day5.1 for client pull (redirect) n compare it with day5.2 : server pull(RD's forward)
+
+Day 6
+No new assignments today ! BUT do complete pending work n more importantly the revision
+
+1. import day6.1 , to revise RequestDispatcher's forward.
+2. import day6.2 , to revise RequestDispatcher's forward.
+refer to readme : "page navigation" n it's flowchart
+3. import day6.3 , to revise servlet config n adding init params
+refer to readmes from "day6-data\day6_help\readmes" : "regarding servletconfig"
+4. Refer to the diagrams folder 
+servlet life cycle , HttpSession internals , forward n include diagrams
+
+5. import day6.4 , to differentiate between , config vs context . 
+Do read "regarding servletcontext"
+
+Day 7
+1. import day7.1 project in your workspace , trace all the links from index.jsp , to revisit , JSP basics(comments , scripting elements , EL syntax , page directive)
+Refer : readme_jsp n diagrams.
+
+2. Complete pending work.
+
+3. Solve , 
+day7-data\day7_help\JSP Assignment.png
+(Will be discussed ,after I join the lab session)
+
+Day 8
+
+1. day 7 assignment solution in eclipse project : day7_assignment
+
+2. Applying URL rewriting n JSP directives  in eclipse project : day8.1
+
+3. MOST IMPORTANT REVISION
+ import day8_cms , in your workspace. Edit DBUtils , as per your db settings
+Trace entire flow from JSP --JavaBean --DAO (DBUtils) --POJO --DB
+Use readme_jsp n JSP-JB diagrams , during the revision.
+If possible , try to draw HttpSession internals , for this.
+
+4. We will continue with the admin part , after I join.
+
+Day 9
+1. import day9.1 . (web app : JSP --JB --JDBC Based DAO --DBUtils --POJO --DB)
+I have fixed errors . Take a look.
+
+2. import day9_hibernate (as existing Maven project)
+Edit hibernate.cfg.xml , as per your db settings
+Revise , using code , diagrams(hibernate overview) n readmes
+readme_hibernate , hibernate_help
+Good reference for JPA Annotations :
+
+https://dzone.com/articles/all-jpa-annotations-mapping-annotations
+
+https://www.journaldev.com/17803/jpa-hibernate-annotations
+
+3. We will continue to hibernate based DAO layer after I join .
+
+Day 10
+1. import day10.1 (as existing Maven project)
+Edit hibernate.cfg.xml , as per your db settings
+1.1 Refer to day10-data\day10_help\diagrams\layers-in-hibernate.png , for the overview
+
+1.2 Refer to readme : hibernate session api , auto dirty checking , to revise ,all code samples , in top-down manner.
+(i.e open the tester n solve it . Mainly focus on : DAO n POJO layers)
+
+2. Try this.
+2.1 
+User Login 
+i/p : email n password
+o/p User details with success mesg or invalid login mesg
+eg : DAO i/f
+User authenticateUser(String email,String pwd);
+DAO impl class : no state, no ctor , no clean up
+imple method
+get session (getCurrentSession)
+begin tx
+try 
+{
+   user=session.createQuery(jpql,User.class).setParameter(nm,val).setParameter(nm,val).
+getSingleResult();
+   commit
+} catch -- runtime exc -- rollback--throw e
+
+
+2.2 Change password
+i/p --user id , new password
+o/p : mesg indicating success or a failure
+eg : DAO i/f method
+String changePassword(int userId,String newPassword);
+imple class : 
+get session (getCurrentSession)
+begin tx
+try 
+{
+  User user=session.get(...);
+  chk for null --not null =>valid user id --change pwd : setter
+   commit //update
+} catch -- runtime exc -- rollback--throw e
+
+2.3 Display all customer (CUSTOMER role only !) details registered after specified date , ordered as per registration amount.
+i/p : date
+DAO i/f method 
+List<User> getCustomersByDate(LocalDate date);
+imple class : 
+get session (getCurrentSession)
+begin tx
+try 
+{
+    users=session.createQuery("select u from User u where u.userRole=:rl and u.regDate > :dt order by u.regAmount",User.class)......getResultList
+   commit 
+} catch -- runtime exc -- rollback--throw e
+
+
+3. Time permitting , we will integrate hibernate in web application, maven based .
+
+4. Time permitting : unit testing.
+
+Day 11
+1.import day11.1 (as existing Maven project)
+Edit hibernate.cfg.xml , as per your db settings
+1.1 Refer to hibernate session API , POJO lifecycle image n POJO state table , for revision
+
+1.2 Go through these testers n trace the flow (with sequence document)
+1. TestSessionAPI (revise save vs persist vs merge  vs saveOrUpdate vs update)
+2. GetSelectedUserNames
+3. GetSomeUserDetails : constructor reference
+4. UnsubscribeUser
+5. SaveImage n RestoreImage
+
+2. import day11.2 n look at BaseEntity , Course n Student
+We will continue to develop one to many bi dir relationship in the lab session later.
+
+3. Solve 
+3.1 Apply discount to reg amount , for all users , reged before a specific date.
+i/p -- discount amt, reg date
+Hint : use update JPQL
+
+3.2 Delete customer details for those CUSTOMERS registered after a specific date
+i/p --  reg date
+Hint : user delete JPQL
+
+4. Later we will solve 
+Objectives : 
+1.  Launch new course
+i/p : course details
+
+2. Admit student
+I/p -- student name, email, course name
+o/p -- student details inserted + linked with FK
+
+DAO --IStudentDao
+String admitNewStudent(String courseName,Student s);
+
+3. Cancel Course
+i/p : course id
+
+4. Objective : 
+Launch a new course , having no of students
+eg : Course : hibernate.....
+s1,s2,s3,s4 : have already paid the fees for the course
+Expected o/p : 1 rec should be inserted in course table & 4 recs in student tbl + linked with FK
+
+5. Cancel Admission
+String cancelAdmission(String courseName,int studentId);
+Hint : use helper method.
+Any problems ?????
+Solution : orphanRemoval
+
+6 Display  Course Details 
+i/p : course name
+
+
+7. Display enrolled student details of the specified course name
+i/p : course name
+o/p student details enrolled in the course.
+
+Any problems observed ? 
+
+Day 12
+
+1. Good news.
+Solved the bug.
+
+Just copy this 1 line in your hibernate.cfg.xml
+<property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+
+OR copy supplied xml file. 
+Run the project , you will see the welcome message.
+
+OR 
+simply import "day12_web_hibernate_maven" , as existing maven project in your workspace , edit db settings n run it.
+
+
+2. Revise one to many bi dir association.
+
+3. Revise one to one uni dir association using share PK approach.
+	
+4. Solve , in day12.1 (core java + hibernate project)
+4.1 Link  address details to existing student
+i/p : student id n address deatils (city,state,country,zip code)
+
+4.2 Update city , for a particular student
+i/p student id n new city
+
+5. Continue with day12_web_hibernate_maven (web app + hibernate)
+
+Solve this
+5.1 Complete login flow.
+login.jsp ---> display.jsp , with a logout link ---> logout.jsp
+Layers : JSP--JB--Hibernate based DAO --HibernateUtil --Hibernate managed POJO --DB
+
+Steps
+0. Table : users (already exists)
+1. Create JPA annotated User POJO , as per your ContentManagementSystem's table : users , having columns 
+id | name    | email          | password | reg_amt | reg_date   | role
+
+2. Create a DAO for user authentication.
+
+3. Can use earlier JSP , Java Bean or create from scratch.
+
+4. Test entire web app.
+
+
+
+
+
+
+Day 13
+1. import day13.1 ,edit db settings . 
+Revise
+All entity --- entity relationships & later entity--value types
+Student n Project
+Student n AdharCard , hobbies , educational qualifications.
+
+Solve 
+1. Launch new project
+i/p : project details 
+o/p : mesg 
+API : sessin.persist(transientroject);
+
+
+2. Add a student to a project
+i/p : student email , project title
+eg : IProjectDao
+String addStudentToProject(student email , project title)
+2.1 get student by email : JPQL
+2.2 get project by title : JPQL
+2.3 p.addStudent(s);
+commit;
+
+3. Remove student from project 
+i/p : student email , project title
+eg : IProjectDao
+String addStudentToProject(student email , project title)
+2.1 get student by email : JPQL
+2.2 get project by title : JPQL
+2.3 p.removeStudent(s);
+commit;
+
+
+OPTIONAL work 
+4. Display all the student details from a specific project
+i/p : project title
+o/p  : student details
+eg : jpql = "select p.students from Project p where p.title=:title";
+Change it to : "select p from Project p join fetch p.students where p.title=:title";
+So it will get you project instance loaded with students, which u can access in tester.
+
+After I login , we will continue to objective below.
+2. Refer to day8_lab_cms. Port it to web application(admin part) , with hibernate n maven.
+For practice , we will configure , Topic 1 <------* Tutorial (uni dir many to one association)
+
+
+Topic : one , parent
+
+
+Tutorial : many , child , owning : FK
+
+Hi All .
+I have uploaded latest version of day13_cms_hibernate. 
+Added TutorialBean n ItutorialDao 
+So if you want to practice , you can try completing ITutorialDaoImpl . We will discuss it in tomorrow's lab.
+
+
+Day 14
+
+1. Open spring api docs in your web browser 
+
+2. Import all of day14 projects in your workspace. 
+
+Eclipse Projects list n highlights to revise.
+
+2.1 day14_spring_java_se : singleton bean life cycle + setter based D.I 
+
+2.2 day14.2 : prototype bean life cycle + setter based D.I
+
+2.3 day14.3 : singleton bean life cycle + constructor based D.I 
+
+2.4 day14.4 : singleton bean life cycle + Factory method based D.I 
+
+After I login : 
+
+1. Reference project : day13.1_lab
+(which has complete E-R , Course , Student , Address , Project : entities , Value Types : hobbies, edu qualifications , adhar card)
+
+Q. Will you get any problem , while cancelling student admission ?
+YES !
+ConstraintViolationException : root cause : you can't delete parent rec before removing child recs .
+
+Which are the child recs of Student  ? : Address , entry in the link table : projects_students.
+
+You DO NOT have to delete any value type recs(i.e hobbies , edu qualifications , adhar card) . Since they represent composition (part-of) relationship , hibernate will auto delete them.
+BUT , since entities DO HAVE an independent existence , before deleting student record , you will have to delete it's associated address rec n entries in the project_student table.
+
+How will you manage it???
+//first mark child entities for removal :adr n project_student link n then continue to deletion of a student : s
+1. adr : Address a =session.get(Address.class,s.getId());
+chk null
+session.delete(a);
+2. remove all links for specific student from the link table
+jpql : select p from Project p : join ....
+
+3. finally : delete parent rec.
+c.removeStudent(s);//marking student entity for removal
+
+3. We will discuss n implement auto-wiring 
+
+4. Continue to completion of a CMS case study.
+
+

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<!-- bean configuration tags -->
+	<!-- dependency beans -->
+	<bean id="test" class="dependency.TestTransport" />
+	<bean id="http" class="dependency.HttpTransport" />
+	<bean id="myTransport" class="dependency.SoapTransport" />
+	<!-- dependent bean -->
+	<bean id="my_atm" class="dependent.ATMImpl"
+		init-method="customInit" destroy-method="customDestroy" autowire="byName"/>
+		
+	
+</beans>
